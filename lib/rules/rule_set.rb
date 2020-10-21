@@ -25,7 +25,7 @@ module Rules
     def self.attributize(attributes_hash)
       mapped_hash = {}
       attributes_hash.each do |k, v|
-        mapped_hash[k] = Rules::Parameters::Attribute.new(v.merge(key: k))
+        mapped_hash[k.to_sym] = Rules::Parameters::Attribute.new(v.merge(key: k))
       end
       mapped_hash
     end
@@ -64,9 +64,8 @@ module Rules
       reflection_name = (parameter.through ? parameter.through : parameter.association).to_s
 
       association = source_class.reflections[reflection_name]
-      return unless association
 
-      if association.collection?
+      if association.respond_to?(:collection?) && association.collection?
         associated_items = source.send(reflection_name)
         associated_items.each do |item|
           hash[key] ||= []
@@ -109,7 +108,13 @@ module Rules
     # TODO: Arbitrary rule set logic (Treetop)
     def evaluate(attributes = {})
       return true unless rules.any?
-      attributes_to_evaluate = collected_attributes.merge(attributes)
+
+      attributes_to_evaluate = if !attributes || attributes.empty?
+        collected_attributes
+      else
+        attributes
+      end
+
       if evaluation_logic == 'any'
         !!rules.detect { |rule| rule.evaluate(attributes_to_evaluate) }
       else
