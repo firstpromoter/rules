@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20201020215256) do
+ActiveRecord::Schema.define(version: 20201021020351) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "resource_id",   null: false
@@ -57,6 +57,21 @@ ActiveRecord::Schema.define(version: 20201020215256) do
     t.integer  "author_id"
     t.string   "title"
     t.integer  "year"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "chapters", force: :cascade do |t|
+    t.integer  "book_id"
+    t.string   "title"
+    t.integer  "number"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "forewords", force: :cascade do |t|
+    t.integer  "book_id"
+    t.text     "dedication"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

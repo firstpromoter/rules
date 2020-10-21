@@ -312,5 +312,45 @@ describe Rules::Rule do
         author.rules_pass?.should be true
       end
     end
+
+    context 'when attribute is on third-level association' do
+      let!(:author) { Author.new(first_name: 'J.R.R.', last_name: 'Tolkien') }
+      let!(:book) do
+        author.books.build(
+          title: 'The Fellowship of the Ring',
+          year: 1954
+        )
+      end
+      let!(:chapter) do
+        book.chapters.build(
+          title: 'A Long-Expected Party',
+          number: 1
+        )
+      end
+      let!(:foreword) do
+        book.build_foreword(
+          dedication: 'To my son, Christopher'
+        )
+      end
+
+      it 'passes for has many' do
+        rule = author.rule_set.rules.build(
+          lhs_parameter_key: :chapter_titles,
+          evaluator_key: 'contains',
+          rhs_parameter_raw: chapter.title
+        )
+        author.rules_pass?(chapter_titles: chapter.title).should be true
+        author.rules_pass?.should be true
+      end
+
+      it 'passes for has one' do
+        rule = author.rule_set.rules.build(
+          lhs_parameter_key: :book_dedications,
+          evaluator_key: 'contains',
+          rhs_parameter_raw: 'To my son, Christopher'
+        )
+        author.rules_pass?.should be true
+      end
+    end
   end
 end

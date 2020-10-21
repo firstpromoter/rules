@@ -16,6 +16,18 @@ class Author < ActiveRecord::Base
       name: 'pen name',
       association: :pen_name,
       attribute: :name
+    },
+    chapter_titles: {
+      name: 'book chapter titles',
+      association: :chapters,
+      through: :books,
+      attribute: :title
+    },
+    book_dedications: {
+      name: 'book dedications',
+      association: :foreword,
+      through: :books,
+      attribute: :dedication
     }
   })
 end

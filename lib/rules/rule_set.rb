@@ -1,3 +1,4 @@
+require 'logger'
 require 'rules/has_rules'
 require 'rules/parameters/attribute'
 
@@ -38,25 +39,47 @@ module Rules
       self.class.attributes[source_class]
     end
 
+    def value_for_target(parameter, target)
+      return nil unless target
+
+      associated_attribute_name = parameter.associated_attribute_name
+      if target.respond_to?(:map)
+        target.map {|t| t.send(associated_attribute_name) }
+      else
+        target.send(associated_attribute_name)
+      end
+    end
+
+    def value_for_parameter(parameter, association, options = {})
+      target = if parameter.through
+        association.send(parameter.association)
+      else
+        association
+      end
+      value_for_target(parameter, target)
+    end
+
     def add_association_value_to_hash!(hash, parameter)
       key = parameter.key
-      reflection_name = parameter.association.to_s
+      reflection_name = (parameter.through ? parameter.through : parameter.association).to_s
+
       association = source_class.reflections[reflection_name]
       return unless association
 
-      if association.collection? # has_many or similar
+      if association.collection?
         associated_items = source.send(reflection_name)
         associated_items.each do |item|
           hash[key] ||= []
-          hash[key] << item.send(
-            parameter.associated_attribute_name
-          )
+          value = value_for_parameter(parameter, item)
+          if value.is_a?(Array)
+            hash[key] = value
+          else
+            hash[key] << value
+          end
         end
       else
-        associated_item = source.send(reflection_name)
-        if associated_item
-          hash[key] ||= associated_item.send(parameter.associated_attribute_name)
-        end
+        association = source.send(reflection_name)
+        hash[key] ||= value_for_parameter(parameter, association)
       end
     end
 
@@ -73,9 +96,11 @@ module Rules
           else
             add_local_value_to_hash!(mapped_hash, parameter)
           end
-        rescue
+        rescue Exception => e
           message = "rules gem: Parameter #{parameter.key} appears to be misconfigured."
-          Rails ? Rails.logger.warn(message) : puts(message)
+          logger = Logger.new(STDOUT)
+          logger.warn(message)
+          logger.error(e)
         end
       end
       mapped_hash
