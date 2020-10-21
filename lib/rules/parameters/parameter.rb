@@ -3,7 +3,7 @@ module Rules::Parameters
     VALID_TYPES = [:date, :integer, :float, :boolean, :string, :regexp]
     NON_WORD_CHARACTER_REGEX = /\W/
 
-    attr_accessor :name, :type, :key, :association, :attribute
+    attr_accessor :name, :type, :key, :association, :attribute, :through
 
     def self.cast(value, type)
       return value unless type
@@ -31,6 +31,7 @@ module Rules::Parameters
       self.type = options[:type] if options[:type]
       self.association = options[:association] if options[:association]
       self.attribute = options[:attribute] if options[:attribute]
+      self.through = options[:through] if options[:through]
 
       raise "Unknown type #{type}" if type && !VALID_TYPES.include?(type)
     end

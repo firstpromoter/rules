@@ -39,6 +39,11 @@ class Order < ActiveRecord::Base
   })
 end
 
+class Book < ActiveRecord::Base
+  has_many :chapters
+  # (Works on has_one associations, too)
+end
+
 class Author < ActiveRecord::Base
   include Rules::HasRules
 
@@ -50,6 +55,13 @@ class Author < ActiveRecord::Base
       association: :books,
       attribute: :title # Not required if the attribute name (here :titles) ends in a singularizable
                         # version of the attribute (in this case, Book.title)
+    },
+    chapter_titles: {
+      name: "book chapter titles by this author",
+      association: :chapters,
+      through: :books,
+      attribute: :title # Required here because otherwise the attribute would be assumed to be :chapter_title,
+                        # but in this case, it is just :title on the Chapter model.
     }
   })
 end
