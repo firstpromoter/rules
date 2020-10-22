@@ -12,7 +12,7 @@ module Rules
     end
 
     define_evaluator :contains do
-      self.evaluation_method = ->(lhs, rhs) { lhs.include?(rhs) }
+      self.evaluation_method = ->(lhs, rhs) { binding.pry; lhs.include?(rhs) }
       self.name = 'contains'
       self.requires_rhs = true
     end
@@ -20,6 +20,18 @@ module Rules
     define_evaluator :not_contains do
       self.evaluation_method = ->(lhs, rhs) { !lhs.include?(rhs) }
       self.name = 'does not contain'
+    end
+
+    define_evaluator :in_list do
+      self.evaluation_method = ->(lhs, rhs) { rhs.include?(lhs) }
+      self.name = 'in list'
+      self.requires_rhs = true
+    end
+
+    define_evaluator :not_in_list do
+      self.evaluation_method = ->(lhs, rhs) { !rhs.include?(lhs) }
+      self.name = 'not in list'
+      self.requires_rhs = true
     end
 
     define_evaluator :nil do
