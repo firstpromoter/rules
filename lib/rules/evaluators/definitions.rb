@@ -1,18 +1,32 @@
 module Rules
   module Evaluators
     define_evaluator :equals do
-      self.evaluation_method = ->(lhs, rhs) { lhs == rhs }
+      self.evaluation_method = ->(lhs, rhs) do
+        if numeric_lhs?(lhs)
+          # rhs set in active admin for integer/decimal column,
+          # but rhs_parameter_raw is always string
+          return numeric_equals(lhs, rhs)
+        end
+        lhs == rhs
+      end
       self.requires_rhs = true
     end
 
     define_evaluator :not_equals do
-      self.evaluation_method = ->(lhs, rhs) { lhs != rhs }
+      self.evaluation_method = ->(lhs, rhs) do
+        if numeric_lhs?(lhs)
+          # rhs set in active admin for integer/decimal column,
+          # but rhs_parameter_raw is always string
+          return !numeric_equals(lhs, rhs)
+        end
+        lhs != rhs
+      end
       self.name = 'does not equal'
       self.requires_rhs = true
     end
 
     define_evaluator :contains do
-      self.evaluation_method = ->(lhs, rhs) { binding.pry; lhs.include?(rhs) }
+      self.evaluation_method = ->(lhs, rhs) { lhs.include?(rhs) }
       self.name = 'contains'
       self.requires_rhs = true
     end
@@ -84,4 +98,12 @@ module Rules
       self.requires_rhs = true
     end
   end
+end
+
+def numeric_lhs?(lhs)
+  lhs.is_a?(Numeric)
+end
+
+def numeric_equals(lhs, rhs)
+  lhs.to_f == rhs.to_f
 end
