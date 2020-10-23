@@ -2,11 +2,7 @@ module Rules
   module Evaluators
     define_evaluator :equals do
       self.evaluation_method = ->(lhs, rhs) do
-        if numeric_lhs?(lhs)
-          # rhs set in active admin for integer/decimal column,
-          # but rhs_parameter_raw is always string
-          return numeric_equals(lhs, rhs)
-        end
+        return numeric_equation(lhs, rhs, :==) if numeric_lhs?(lhs)
         lhs == rhs
       end
       self.requires_rhs = true
@@ -14,11 +10,7 @@ module Rules
 
     define_evaluator :not_equals do
       self.evaluation_method = ->(lhs, rhs) do
-        if numeric_lhs?(lhs)
-          # rhs set in active admin for integer/decimal column,
-          # but rhs_parameter_raw is always string
-          return !numeric_equals(lhs, rhs)
-        end
+        return !numeric_equation(lhs, rhs, :==) if numeric_lhs?(lhs)
         lhs != rhs
       end
       self.name = 'does not equal'
@@ -75,25 +67,37 @@ module Rules
     end
 
     define_evaluator :less_than do
-      self.evaluation_method = ->(lhs, rhs) { lhs < rhs }
+      self.evaluation_method = ->(lhs, rhs) do
+        return numeric_equation(lhs, rhs, :<) if numeric_lhs?(lhs)
+        lhs < rhs
+      end
       self.name = 'less than'
       self.requires_rhs = true
     end
 
     define_evaluator :less_than_or_equal_to do
-      self.evaluation_method = ->(lhs, rhs) { lhs <= rhs }
+      self.evaluation_method = ->(lhs, rhs) do
+        return numeric_equation(lhs, rhs, :<=) if numeric_lhs?(lhs)
+        lhs <= rhs
+      end
       self.name = 'less than or equal to'
       self.requires_rhs = true
     end
 
     define_evaluator :greater_than do
-      self.evaluation_method = ->(lhs, rhs) { lhs > rhs }
+      self.evaluation_method = ->(lhs, rhs) do
+        return numeric_equation(lhs, rhs, :>) if numeric_lhs?(lhs)
+        lhs > rhs
+      end
       self.name = 'greater than'
       self.requires_rhs = true
     end
 
     define_evaluator :greater_than_or_equal_to do
-      self.evaluation_method = ->(lhs, rhs) { lhs >= rhs }
+      self.evaluation_method = ->(lhs, rhs) do
+        return numeric_equation(lhs, rhs, :>=) if numeric_lhs?(lhs)
+        lhs >= rhs
+      end
       self.name = 'greater than or equal to'
       self.requires_rhs = true
     end
@@ -104,6 +108,6 @@ def numeric_lhs?(lhs)
   lhs.is_a?(Numeric)
 end
 
-def numeric_equals(lhs, rhs)
-  lhs.to_f == rhs.to_f
+def numeric_equation(lhs, rhs, operator)
+  lhs.to_f.send(operator, rhs.to_f)
 end
